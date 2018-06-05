@@ -10,7 +10,7 @@ use Globals;
 Plugins::register('flagcontroller', '', \&on_unload, \&on_reload);
 
 my $hooks = Commands::register(
-    ['f', 'Global flags', \&commandHandler]
+    ['f', 'Global flag hash controller', \&commandHandler]
 );
 
 sub commandHandler {
@@ -29,6 +29,8 @@ sub commandHandler {
         };
     }
     else {
+        # if flag is emp, set/unset it on mon_control
+        # so the bot wont try to attack it constinously.
         $flags{$arg} = 1;
     }
 }
