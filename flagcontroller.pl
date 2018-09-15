@@ -31,7 +31,18 @@ sub commandHandler {
     else {
         # if flag is emp, set/unset it on mon_control
         # so the bot wont try to attack it constinously.
-        $flags{$arg} = 1;
+        my $isset = 0;
+        for (keys %flags){
+            if($_ eq $arg ) {
+                $isset = 1;
+            }
+        };
+        if($isset eq 0) {
+            $flags{$arg} = 1;
+        }
+        else {
+            delete $flags{$arg};
+        }
     }
 }
 
