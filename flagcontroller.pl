@@ -1,16 +1,19 @@
-package flagcontroller;
+package FlagController;
 
 use Plugins;
 use Commands; #Commands::cmdUseSkill
 use Data::Dumper;
-
+use Translation qw/T TF/;
 use Log qw(message);
 use Globals;
 
-Plugins::register('flagcontroller', '', \&on_unload, \&on_reload);
+Plugins::register('FlagController', '', \&on_unload, \&on_reload);
 
-my $hooks = Commands::register(
+my $commands = Commands::register(
     ['f', 'Global flag hash controller', \&commandHandler]
+);
+my $plugins = Plugins::addHooks(
+    ["start3", \&onstart3, undef]
 );
 
 sub commandHandler {
@@ -46,8 +49,22 @@ sub commandHandler {
     }
 }
 
+sub onstart3 {
+#    if (
+#        $interface->isa ('Interface::Wx')
+#        && $interface->{viewMenu}
+#        && $interface->can ('addMenu')
+#        && $interface->can ('openWindow')
+#    ) {
+#        $interface->addMenu ($interface->{viewMenu}, T('Combo Interface'), sub {
+#            $interface->openWindow (T('Combos'), 'FlagController::Wx::Interface', 1);
+#        }, T('Statistcs of combos by AnotherCombo Plugin'));
+#    }
+}
+
 sub on_unload {
-    Commands::unregister($hooks);
+    Plugins::unregister($plugins);
+    Commands::unregister($commands);
 }
 
 sub on_reload {
