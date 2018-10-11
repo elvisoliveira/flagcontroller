@@ -11,7 +11,7 @@ use Globals;
 
 use lib $Plugins::current_plugin_folder;
 
-Plugins::register('flagcontroller', '', \&on_unload, \&on_reload);
+Plugins::register('FlagController', '', \&on_unload, \&on_reload);
 
 my $commands = Commands::register(
     ['f', 'Global flag hash controller', \&commandHandler]
@@ -51,7 +51,7 @@ sub commandHandler {
         for (keys %flags){
             delete $flags{$_};
         };
-        Plugins::callHook('flagcontroller', { arg => $arg, isset => undef });
+        Plugins::callHook('FlagController', { arg => $arg, isset => undef });
     }
     elsif ($arg eq 'ls') {
         for (keys %flags){
@@ -73,7 +73,7 @@ sub commandHandler {
         else {
             delete $flags{$arg};
         }
-        Plugins::callHook('flagcontroller', { arg => $arg, isset => $isset });
+        Plugins::callHook('FlagController', { arg => $arg, isset => $isset });
     }
 }
 
@@ -87,7 +87,7 @@ sub onstart3 {
         $interface->addMenu ($interface->{viewMenu}, T('FlagController'), sub {
             my ($page, $window) = $interface->openWindow (T('Tasks'), 'FlagController::Wx', 1);
             if ($window) {
-                $window->setEmotions(\%commands);
+                $window->setFlags(\%commands);
             };
             return ($page, $window);
         }, T('Tasks assigned by FlagController Plugin'));

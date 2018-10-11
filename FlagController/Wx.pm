@@ -19,7 +19,7 @@ sub new {
     my ($class, $parent, $id) = @_;
     my $self = $class->SUPER::new ($parent, $id);
     my $hooks = Plugins::addHooks (
-        ["flagcontroller", sub { $self->onChange (@_) }]
+        ["FlagController", sub { $self->onChange (@_) }]
     );
 
     EVT_SIZE ($self, \&_onSize);
@@ -38,7 +38,7 @@ sub _onSize {
         $self->GetSizer->Layout;
     }
 }
-sub setEmotions {
+sub setFlags {
     my ($self, $commands) = @_;
     $self->{commands} = $commands;
     if (my $total = keys %{$self->{commands}}) {
