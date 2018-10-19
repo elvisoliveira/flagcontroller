@@ -17,6 +17,7 @@ my $commands = Commands::register(
     ['f', 'Global flag hash controller', \&commandHandler]
 );
 my $plugins = Plugins::addHooks(
+    ['AI_pre', \&on_ai],
     ["start3", \&onstart3, undef]
 );
 my %commands = (
@@ -27,7 +28,7 @@ my %commands = (
     1 => {
         command => "clear",
         display => "Reset Commands"
-    }, 
+    },
     2 => {
         command => "party",
         display => "Party Buffs"
@@ -41,6 +42,7 @@ my %commands = (
         display => "Protect Stones"
     }
 );
+my %temp;
 
 sub commandHandler {
     if (!defined $_[1]) {
@@ -92,6 +94,14 @@ sub onstart3 {
             return ($page, $window);
         }, T('Tasks assigned by FlagController Plugin'));
     }
+}
+
+sub on_ai {
+    %temp = %flags if (!%temp);
+    for (keys %temp){
+        Plugins::callHook('FlagController', { arg => $_, isset => 0 }) if(!exists($flags{$_}));
+    };
+    %temp = %flags;
 }
 
 sub on_unload {
