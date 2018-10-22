@@ -20,6 +20,8 @@ my $plugins = Plugins::addHooks(
     # ['AI_pre', \&on_ai],
     ["start3", \&onstart3, undef]
 );
+# TODO: Transfer commands to config
+# TODO: Add option to reset commands with map change
 my %commands = (
     0 => {
         command => "ls",
@@ -28,28 +30,9 @@ my %commands = (
     1 => {
         command => "clear",
         display => "Reset Commands"
-    },
-    2 => {
-        command => "party",
-        display => "Party Buffs"
-    },
-    3 => {
-        command => "self",
-        display => "Self Buffs"
-    },
-    4 => {
-        command => "keep",
-        display => "Protect Stones"
-    },
-    5 => {
-        command => "keepme",
-        display => "Safety Wall Me"
-    },
-    6 => {
-        command => "war",
-        display => "War"
     }
 );
+my %options = ();
 my %temp;
 
 sub commandHandler {
@@ -58,10 +41,10 @@ sub commandHandler {
     }
     my ($arg, @params) = split(/\s+/, $_[1]);
     if ($arg eq 'clear') {
-        for (keys %flags){
+        for (keys %flags) {
             delete $flags{$_};
         };
-        Plugins::callHook('FlagController', { arg => $arg, isset => undef });
+        Plugins::callHook('flagControllerButton', { arg => $arg });
     }
     elsif ($arg eq 'ls') {
         if (%flags) {
@@ -76,43 +59,44 @@ sub commandHandler {
     else {
         # if flag is emp, set/unset it on mon_control
         # so the bot wont try to attack it constinously.
-        my $isset = 0;
-        for (keys %flags){
-            if($_ eq $arg ) {
-                $isset = 1;
-            }
+        my $isset = 1;
+        for (keys %flags) {
+            $isset = 0 if($_ eq $arg );
         };
-        if($isset eq 0) {
-            $flags{$arg} = 1;
+        if($isset eq 1) {
+            $flags{$arg} = 0;
         }
         else {
             delete $flags{$arg};
         }
-        Plugins::callHook('FlagController', { arg => $arg, isset => $isset });
+        Plugins::callHook('flagControllerToggleButton', { arg => $arg, isset => $isset });
     }
 }
 
 sub onstart3 {
-    if (
-        $interface->isa ('Interface::Wx')
+    if ($interface->isa ('Interface::Wx')
         && $interface->{viewMenu}
         && $interface->can ('addMenu')
-        && $interface->can ('openWindow')
-    ) {
+        && $interface->can ('openWindow')) {
         $interface->addMenu ($interface->{viewMenu}, T('FlagController'), sub {
             my ($page, $window) = $interface->openWindow (T('Tasks'), 'FlagController::Wx', 1);
-            if ($window) {
-                $window->setFlags(\%commands);
-            };
+            for ($i = 0; exists $config{"flagController_${i}"}; $i++) {
+                next unless ($config{"flagController_${i}"});
+                next if ($config{"flagController_${i}_disabled"});
+                $options{${i}}{command} = $config{"flagController_${i}_command"};
+                $options{${i}}{display} = $config{"flagController_${i}"}
+            }
+            $window->setFlags(\%commands, \%options) if ($window);
             return ($page, $window);
         }, T('Tasks assigned by FlagController Plugin'));
     }
 }
 
 sub on_ai {
+    # @TODO: Fix interface changes based on %flags changes.
     %temp = %flags if (!%temp);
-    for (keys %temp){
-        Plugins::callHook('FlagController', { arg => $_, isset => 1 }) if(!exists($flags{$_}));
+    for (keys %temp) {
+        Plugins::callHook('flagControllerButton', { arg => $_, isset => 1 }) if(!exists($flags{$_}));
     };
     %temp = %flags;
 }

@@ -4,7 +4,7 @@ use strict;
 use Data::Dumper;
 use base 'Wx::Panel';
 use Wx ':everything';
-use Wx::Event qw/EVT_SIZE EVT_BUTTON/;
+use Wx::Event qw/EVT_SIZE EVT_TOGGLEBUTTON EVT_BUTTON/;
 use Log qw(message);
 
 use Translation qw/T TF/;
@@ -19,7 +19,8 @@ sub new {
     my ($class, $parent, $id) = @_;
     my $self = $class->SUPER::new ($parent, $id);
     my $hooks = Plugins::addHooks (
-        ["FlagController", sub { $self->onChange (@_) }]
+        ["flagControllerButton", sub { $self->onButtonChange(@_) }],
+        ["flagControllerToggleButton", sub { $self->onToggleButtonChange(@_) }]
     );
 
     EVT_SIZE ($self, \&_onSize);
@@ -39,13 +40,30 @@ sub _onSize {
     }
 }
 sub setFlags {
-    my ($self, $commands) = @_;
+    my ($self, $commands, $options) = @_;
+    # @TODO: Apply DRY principle
     $self->{commands} = $commands;
+    $self->{options} = $options;
+    if (my $total = keys %{$self->{options}}) {
+        for (my ($i, $e) = (0, 0); $i < $total; $e++) {
+            next unless defined $self->{options}{$e};
+            my $cmd = $self->{options}{$e}{command};
+            $self->{button}->{$cmd} = new Wx::ToggleButton(
+                $self, wxID_ANY, $self->{options}{$e}{display}, wxDefaultPosition, [BUTTON_WIDTH, BUTTON_HEIGHT]
+            );
+            $self->{button}->{$cmd}->SetToolTip ($cmd);
+            {
+                EVT_TOGGLEBUTTON($self, $self->{button}->{$cmd}->GetId, sub { Commands::run("f $cmd") });
+            }
+            $self->{grid}->Add($self->{button}->{$cmd});
+            $i++;
+        };
+    }
     if (my $total = keys %{$self->{commands}}) {
         for (my ($i, $e) = (0, 0); $i < $total; $e++) {
             next unless defined $self->{commands}{$e};
             my $cmd = $self->{commands}{$e}{command};
-            $self->{button}->{$cmd} = new Wx::Button (
+            $self->{button}->{$cmd} = new Wx::Button(
                 $self, wxID_ANY, $self->{commands}{$e}{display}, wxDefaultPosition, [BUTTON_WIDTH, BUTTON_HEIGHT]
             );
             $self->{button}->{$cmd}->SetToolTip ($cmd);
@@ -59,19 +77,20 @@ sub setFlags {
     $self->GetSizer->Layout;
     $self->Thaw;
 }
-sub onChange {
+sub onToggleButtonChange {
+    my ($self, undef, $args) = @_;
+    $self->{button}->{$args->{arg}}->SetValue($args->{isset});
+}
+sub onButtonChange {
     my ($self, undef, $args) = @_;
     if ($args->{arg} eq 'clear') {
         if (my $total = keys %{$self->{commands}}) {
             for (my ($i, $e) = (0, 0); $i < $total; $e++) {
                 next unless defined $self->{commands}{$e};
-                $self->{button}->{$self->{commands}{$e}{command}}->Enable(1);
+                $self->{button}->{$self->{options}{$e}{command}}->SetValue(0);
                 $i++;
            }
         }
-    }
-    else {
-        $self->{button}->{$args->{arg}}->Enable($args->{isset});
     }
 }
 sub debugger {
