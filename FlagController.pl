@@ -3,7 +3,7 @@ package FlagController;
 our $plugin_folder = $Plugins::current_plugin_folder;
 
 use Plugins;
-use Commands; #Commands::cmdUseSkill
+use Commands; # Commands::cmdUseSkill
 use Data::Dumper;
 use Translation qw/T TF/;
 use Log qw(message);
@@ -17,7 +17,7 @@ my $commands = Commands::register(
     ['f', 'Global flag hash controller', \&commandHandler]
 );
 my $plugins = Plugins::addHooks(
-    ['AI_pre', \&on_ai],
+    # ['AI_pre', \&on_ai],
     ["start3", \&onstart3, undef]
 );
 my %commands = (
@@ -40,6 +40,14 @@ my %commands = (
     4 => {
         command => "keep",
         display => "Protect Stones"
+    },
+    5 => {
+        command => "keepme",
+        display => "Safety Wall Me"
+    },
+    6 => {
+        command => "war",
+        display => "War"
     }
 );
 my %temp;
@@ -56,9 +64,14 @@ sub commandHandler {
         Plugins::callHook('FlagController', { arg => $arg, isset => undef });
     }
     elsif ($arg eq 'ls') {
-        for (keys %flags){
-            &debugger($_);
-        };
+        if (%flags) {
+            for (keys %flags){
+                &debugger($_);
+            };
+        }
+        else {
+            &debugger("Flags variable is Empty");
+        }
     }
     else {
         # if flag is emp, set/unset it on mon_control
@@ -99,7 +112,7 @@ sub onstart3 {
 sub on_ai {
     %temp = %flags if (!%temp);
     for (keys %temp){
-        Plugins::callHook('FlagController', { arg => $_, isset => 0 }) if(!exists($flags{$_}));
+        Plugins::callHook('FlagController', { arg => $_, isset => 1 }) if(!exists($flags{$_}));
     };
     %temp = %flags;
 }
@@ -110,7 +123,7 @@ sub on_unload {
 }
 
 sub on_reload {
-    message "Reloading...\n";
+    # message "Reloading...\n";
 }
 
 sub debugger {
