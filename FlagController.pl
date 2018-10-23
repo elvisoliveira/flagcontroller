@@ -20,7 +20,6 @@ my $plugins = Plugins::addHooks(
     # ['AI_pre', \&on_ai],
     ["start3", \&onstart3, undef]
 );
-# TODO: Transfer commands to config
 # TODO: Add option to reset commands with map change
 my %commands = (
     0 => {
@@ -72,7 +71,6 @@ sub commandHandler {
         Plugins::callHook('flagControllerToggleButton', { arg => $arg, isset => $isset });
     }
 }
-
 sub onstart3 {
     if ($interface->isa ('Interface::Wx')
         && $interface->{viewMenu}
@@ -91,7 +89,6 @@ sub onstart3 {
         }, T('Tasks assigned by FlagController Plugin'));
     }
 }
-
 sub on_ai {
     # @TODO: Fix interface changes based on %flags changes.
     %temp = %flags if (!%temp);
@@ -100,21 +97,17 @@ sub on_ai {
     };
     %temp = %flags;
 }
-
 sub on_unload {
     # Plugins::unregister($plugins);
     Commands::unregister($commands);
 }
-
 sub on_reload {
     # message "Reloading...\n";
 }
-
 sub debugger {
     # &debugger(1);
     my $datetime = localtime time;
     message Dumper($_[0])."\n";
     # message "[MCA] $datetime: $_[0].\n";
 }
-
 return 1;
